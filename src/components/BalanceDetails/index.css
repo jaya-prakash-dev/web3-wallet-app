@@ -1,0 +1,19 @@
+.balance-container {
+  margin-top: 20px;
+}
+
+.balance-container h2 {
+  color: #ffffff;
+  margin-bottom: 15px;
+}
+
+.balance-container p {
+  color: #cbd5e1;
+  font-size: 16px;
+  margin: 8px 0;
+}
+
+.balance-container p span {
+  font-weight: 600;
+  color: #38bdf8;
+}

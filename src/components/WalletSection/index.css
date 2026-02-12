@@ -1,0 +1,32 @@
+.wallet-section-container {
+  margin-top: 20px;
+  margin-bottom: 30px;
+}
+
+.wallet-section-container h2 {
+  color: #ffffff;
+  margin-bottom: 15px;
+}
+
+.wallet-section-container button {
+  background-color: #2563eb;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 28px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.wallet-section-container button:hover {
+  background-color: #1d4ed8;
+  transform: scale(1.05);
+}
+
+.wallet-section-container p {
+  color: #22c55e;
+  font-size: 16px;
+  font-weight: 600;
+}
