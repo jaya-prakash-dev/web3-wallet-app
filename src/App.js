@@ -1,59 +1,86 @@
-import {Component} from 'react'
-import {ethers} from 'ethers'
-import WalletSection from './components/WalletSection'
-import BalanceDetails from './components/BalanceDetails'
-import './App.css'
+import { Component } from "react";
+import { ethers } from "ethers";
+import WalletSection from "./components/WalletSection";
+import BalanceDetails from "./components/BalanceDetails";
+import "./App.css";
 
 class App extends Component {
   state = {
-    walletAddress: '',
-    ethBalance: '',
-    usdtBalance: '',
+    walletAddress: "",
+    ethBalance: "",
+    usdtBalance: "",
     isConnected: false,
     isLoading: false,
+    networkError: "",
+  };
+  componentDidMount() {
+    if (window.ethereum) {
+      window.ethereum.on("chainChanged", () => {
+        window.location.reload();
+      });
+
+      window.ethereum.on("accountsChanged", () => {
+        window.location.reload();
+      });
+    }
   }
 
   connectWallet = async () => {
     if (window.ethereum === undefined) {
-      alert('MetaMask is not installed')
-      return
+      alert("MetaMask is not installed");
+      return;
     }
 
-    this.setState({isLoading: true})
+    this.setState({ isLoading: true, networkError: "" });
 
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum)
+      const provider = new ethers.BrowserProvider(window.ethereum);
 
-      await provider.send('eth_requestAccounts', [])
+      // Always request accounts first
+      await window.ethereum.request({
+        method: "eth_requestAccounts",
+      });
 
-      const signer = await provider.getSigner()
-      const address = await signer.getAddress()
+      // Now check network AFTER connection
+      const network = await provider.getNetwork();
 
-      // Fetch ETH balance
-      const balanceInWei = await provider.getBalance(address)
-      const balanceInEth = parseFloat(
-        ethers.formatEther(balanceInWei)
-      ).toFixed(4)
+      if (network.chainId !== 1n) {
+        this.setState({
+          networkError: "Please switch to Ethereum Mainnet",
+          isLoading: false,
+          isConnected: false,
+          walletAddress: "",
+          ethBalance: "",
+          usdtBalance: "",
+        });
+        return;
+      }
 
-      // USDT Contract (Ethereum Mainnet)
-      const usdtContractAddress =
-        '0xdAC17F958D2ee523a2206206994597C13D831ec7'
+      const signer = await provider.getSigner();
+      const address = await signer.getAddress();
+
+      const balanceInWei = await provider.getBalance(address);
+      const balanceInEth = parseFloat(ethers.formatEther(balanceInWei)).toFixed(
+        4,
+      );
+
+      const usdtContractAddress = "0xdAC17F958D2ee523a2206206994597C13D831ec7";
 
       const usdtAbi = [
-        'function balanceOf(address owner) view returns (uint256)',
-      ]
+        "function balanceOf(address owner) view returns (uint256)",
+      ];
 
       const usdtContract = new ethers.Contract(
         usdtContractAddress,
         usdtAbi,
-        provider
-      )
+        provider,
+      );
 
-      const usdtBalanceRaw = await usdtContract.balanceOf(address)
+      const usdtBalanceRaw = await usdtContract.balanceOf(address);
 
       const usdtBalanceFormatted = parseFloat(
-        ethers.formatUnits(usdtBalanceRaw, 6)
-      ).toFixed(2)
+        ethers.formatUnits(usdtBalanceRaw, 6),
+      ).toFixed(2);
 
       this.setState({
         walletAddress: address,
@@ -61,12 +88,13 @@ class App extends Component {
         ethBalance: balanceInEth,
         usdtBalance: usdtBalanceFormatted,
         isLoading: false,
-      })
+        networkError: "",
+      });
     } catch (error) {
-      console.log(error)
-      this.setState({isLoading: false})
+      console.log(error);
+      this.setState({ isLoading: false });
     }
-  }
+  };
 
   render() {
     const {
@@ -75,7 +103,8 @@ class App extends Component {
       usdtBalance,
       isConnected,
       isLoading,
-    } = this.state
+      networkError,
+    } = this.state;
 
     return (
       <div className="app-container">
@@ -87,16 +116,14 @@ class App extends Component {
             isConnected={isConnected}
             connectWallet={this.connectWallet}
             isLoading={isLoading}
+            networkError={networkError}
           />
 
-          <BalanceDetails
-            ethBalance={ethBalance}
-            usdtBalance={usdtBalance}
-          />
+          <BalanceDetails ethBalance={ethBalance} usdtBalance={usdtBalance} />
         </div>
       </div>
-    )
+    );
   }
 }
 
-export default App
+export default App;
